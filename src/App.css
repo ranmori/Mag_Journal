@@ -1,0 +1,81 @@
+@import "tailwindcss";
+@plugin "daisyui";
+
+
+/* src/index.css or a global CSS file */
+.input-retro, .textarea-retro {
+  border: 2px solid black !important;
+  box-shadow: inset 2px 2px 0 0 #4a4a4a !important;
+  border-radius: 0 !important;
+  background-color: #f0f0f0 !important;
+  color: #333333 !important;
+}
+
+.btn-retro {
+  border: 2px solid black !important;
+  box-shadow: 2px 2px 0 0 black !important;
+  border-radius: 0 !important;
+  background-color: #f0f0f0 !important;
+  color: #333333 !important;
+}
+
+.btn-retro:hover {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 0 black !important;
+}
+/* Custom CSS for the Retro Style */
+
+/* Define the look for the active sidebar item */
+.active-retro {
+  background-color: #dcdcdc; /* A slightly darker gray */
+  position: relative;
+  box-shadow: inset 2px 2px 0 0 #4a4a4a;
+  transform: translate(1px, 1px);
+}
+
+/* Ensure the hover effect on the active link is disabled to maintain the pressed look */
+.active-retro:hover {
+  background-color: #dcdcdc !important;
+  transform: translate(1px, 1px) !important;
+}
+
+/* Style for the link element itself */
+.block {
+  text-decoration: none;
+}
+
+/* Add a pressed-in effect on hover for all links */
+.block:not(.active-retro):hover {
+  transform: translate(1px, 1px);
+  box-shadow: inset 2px 2px 0 0 #4a4a4a;
+}
+#root {
+  /* max-width: 1280px; */
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+/* Custom CSS for Retro Navbar */
+
+.btn-retro-nav {
+  display: inline-block;
+  border: 2px solid black;
+  background-color: #f0f0f0;
+  color: black;
+  font-family: 'Press Start 2P', monospace; /* Or your retro font */
+  padding: 0.5rem 1rem;
+  box-shadow: 2px 2px 0 0 black;
+  transition: transform 0.1s, box-shadow 0.1s;
+  cursor: pointer;
+}
+
+.btn-retro-nav:hover {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 1px 0 0 black;
+}
+
+.btn-retro-nav:active {
+  transform: translate(2px, 2px);
+  box-shadow: none;
+}
+

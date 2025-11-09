@@ -1,0 +1,72 @@
+# Node modules
+node_modules/
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+
+
+dist
+dist-ssr
+*.local
+
+# Coverage
+coverage/
+
+# Databases / uploads
+*.sqlite
+*.sqlite3
+*.db
+database/
+data/
+uploads/
+storage/
+# Env & secrets (JWT secrets, API keys, DB credentials)
+.env
+.env.*.local
+.env.local
+local.settings.json
+secrets.json
+*.key
+*.pem
+*.p12
+*.crt
+certs/
+keys/
+backend\.env
+
+# Build / output
+.next/
+out/
+build/
+dist/
+public/out/
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.user
+*.userosscache
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+
+# Test / tooling
+coverage/
+.vagrant/
+.cache/
+parcel-cache/
+.snyk
+# Misc
+*.iml
+*.env.*.key
