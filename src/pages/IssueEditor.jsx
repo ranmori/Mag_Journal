@@ -24,7 +24,7 @@ export default function IssueEditor() {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingSection, setLoadingSection] = useState(null);
   const [successMessage, setSuccessMessage] = useState("");
-  const [uploadedImage, setUploadedImage] = useState(null);
+  const [uploadedImage, setUploadedImage] = useState([]);
   const fileInputRef = useRef(null);
   const [selectedMusicTrack, setSelectedMusicTrack] = useState(null);
 
@@ -386,7 +386,11 @@ export default function IssueEditor() {
           style={{ boxShadow: "8px 8px 0px black" }}
         >
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
-            <h2 className={`text-lg md:text-xl font-bold ${isDark ? "text-white" : "text-black"}`}>
+            <h2
+              className={`text-lg md:text-xl font-bold ${
+                isDark ? "text-white" : "text-black"
+              }`}
+            >
               📖 Live Preview
             </h2>
             <Button
@@ -425,9 +429,13 @@ export default function IssueEditor() {
             >
               ◀ Prev
             </Button>
-            <div className={`flex items-center px-2 py-1 border text-xs ${
-              isDark ? "bg-gray-700 border-gray-600 text-white" : "bg-gray-100 border-gray-300 text-black"
-            }`}>
+            <div
+              className={`flex items-center px-2 py-1 border text-xs ${
+                isDark
+                  ? "bg-gray-700 border-gray-600 text-white"
+                  : "bg-gray-100 border-gray-300 text-black"
+              }`}
+            >
               {currentPreviewPage + 1} / {previewPages.length}
             </div>
             <Button
@@ -492,7 +500,7 @@ export default function IssueEditor() {
             <div className="w-full sm:w-auto flex-shrink-0">
               <AudioPlayer
                 className={`w-full sm:w-64 border-2 border-black p-2 ${
-                  isDark ? "bg-gray-700" : "bg-gray-100"
+                  isDark ? "bg-white" : "bg-white"
                 }`}
                 initialTrack={selectedMusicTrack}
                 onTrackSelect={setSelectedMusicTrack}
@@ -655,6 +663,8 @@ export default function IssueEditor() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                     <div>
                       <label
+                        htmlFor="volume"
+                        arial-label="volume"
                         className={`block font-semibold mb-1 text-sm ${
                           isDark ? "text-white" : "text-black"
                         }`}
@@ -1023,7 +1033,11 @@ export default function IssueEditor() {
                   >
                     {isLoading ? "⏳ Generating..." : "🔗 Share Link"}
                   </Button>
-                  <div className={`pt-2 border-t ${isDark ? "border-gray-700" : "border-gray-200"}`}>
+                  <div
+                    className={`pt-2 border-t ${
+                      isDark ? "border-gray-700" : "border-gray-200"
+                    }`}
+                  >
                     <div
                       className={`text-xs text-center ${
                         isDark ? "text-gray-400" : "text-gray-600"

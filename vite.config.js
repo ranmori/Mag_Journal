@@ -6,15 +6,35 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   test: {
-    environment: 'jsdom',
+    environment: "jsdom",
     globals: true,
-    setupFiles: './tests/setup.js'
+    setupFiles: "./tests/setup.js",
+    testTimeout: 15000,
+    hookTimeout: 15000,
   },
   server: {
     proxy: {
       "/api": {
         target: "http://localhost:5000",
         changeOrigin: true,
+      },
+    },
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        // Remove console.logs in production
+        ...(mode === 'production' && {
+          manualChunks: undefined,
+        }),
+      },
+    },
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        // Remove console.* calls in production
+        drop_console: mode === 'production',
+        drop_debugger: true,
       },
     },
   },

@@ -3,18 +3,92 @@ import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
 import dotenv from "dotenv";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
+import compression from "compression";
+import morgan from "morgan";
+import cookieParser from "cookie-parser";
+import winston from "winston";
+import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
+import { body, validationResult } from "express-validator";
+import { fileURLToPath} from "url";
+import path from "path";
 
-dotenv.config({ path: "./backend/.env" });
+// logger
 
+// ============== WINSTON LOGGER SETUP ==============
+const logger = winston.createLogger({
+  level: process.env.LOG_LEVEL || 'info',
+  format: winston.format.combine(
+    winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+    winston.format.errors({ stack: true }),
+    winston.format.json()
+  ),
+  transports: [
+    new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
+    new winston.transports.File({ filename: 'logs/combined.log' }),
+  ],
+});
+
+if (process.env.NODE_ENV !== 'production') {
+  logger.add(new winston.transports.Console({
+    format: winston.format.combine(
+      winston.format.colorize(),
+      winston.format.simple()
+    ),
+  }));
+}
+
+
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+
+logger.log('Current directory:', __dirname);
+logger.log('File location:', __filename);
+
+const envPath = path.join(__dirname, '..', '.env');
+
+dotenv.config({ path: envPath });
 const app = express();
-app.use(cors());
+const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || "http://localhost:5173";
+app.use(cors({ origin: FRONTEND_ORIGIN }));
 app.use(express.json({ limit: "10mb" })); // Increase limit for base64 images
+app.use(helmet());
+app.use(compression());
+app.use(cookieParser());
 
-const MONGODB_URI = process.env.MONGODB_URI || process.env.mongodb_URI;
+// rate limiter
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+});
+app.use("/api/", limiter);
+
+
+// logger
+
+
+// request logging
+if (process.env.NODE_ENV !== "test") {
+  app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
+}
+
+const MONGODB_URI = process.env.MONGODB_URI 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+// JWT TOKENS
+const JWT_SECRET = process.env.JWT_SECRET || "change_this_in_production";
+const REFRESH_TOKEN_SECRET =
+  process.env.REFRESH_TOKEN_SECRET || "change_refresh_secret";
+const ACCESS_TOKEN_EXPIRES = process.env.ACCESS_TOKEN_EXPIRES || "15m"; // short lived
+const REFRESH_TOKEN_EXPIRES_DAYS = Number(
+  process.env.REFRESH_TOKEN_EXPIRES_DAYS || 7
+);
 
-console.log("✅ GEMINI_API_KEY loaded:", !!GEMINI_API_KEY);
-console.log("✅ MONGODB_URI loaded:", !!MONGODB_URI);
+logger.log("✅ GEMINI_API_KEY loaded:", !!GEMINI_API_KEY);
+logger.log("✅ MONGODB_URI loaded:", !!MONGODB_URI);
 
 // ============== GEMINI API FUNCTIONS ==============
 const GEMINI_API_URL =
@@ -72,7 +146,7 @@ const callGeminiAPI = async (prompt) => {
       throw new Error("Invalid response format from Gemini API");
     }
   } catch (error) {
-    console.error("Gemini API Error:", error);
+    logger.error("Gemini API Error:", error);
     throw error;
   }
 };
@@ -218,16 +292,43 @@ const issueSchema = new mongoose.Schema({
 
 const Issue = mongoose.model("Issue", issueSchema);
 
-// ============== API ROUTES ==============
-
-// Health check
-app.get("/api/health", (req, res) => {
-  res.json({
-    status: "ok",
-    geminiConfigured: !!GEMINI_API_KEY,
-    mongodbConfigured: !!MONGODB_URI,
-  });
+// user issues
+const userSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  email: {
+    type: String,
+    required: true,
+    unique: true,
+    lowercase: true,
+    trim: true,
+  },
+  passwordHash: { type: String, required: true },
 });
+const createAccessToken = (user) =>
+  jwt.sign({ userId: user._1d || user._id, email: user.email }, JWT_SECRET, {
+    expiresIn: ACCESS_TOKEN_EXPIRES,
+  });
+
+const createRefreshToken = (user) =>
+  jwt.sign({ userId: user._id, email: user.email }, REFRESH_TOKEN_SECRET, {
+    expiresIn: `${REFRESH_TOKEN_EXPIRES_DAYS}d`,
+  });
+
+// middle ware
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1];
+  if (!token) return res.status(401).json({ error: "Missing access token" });
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+    req.user = payload;
+    next();
+  } catch (err) {
+    return res.status(401).json({ error: "Invalid or expired access token" });
+  }
+};
+
+// ============== API ROUTES ==============
 
 // ===== GEMINI AI ROUTES =====
 app.post("/api/gemini/generate-title", async (req, res) => {
@@ -235,7 +336,7 @@ app.post("/api/gemini/generate-title", async (req, res) => {
     const title = await generateTitle();
     res.json({ data: { title } });
   } catch (err) {
-    console.error("Generate title error:", err);
+    logger.error("Generate title error:", err);
     res.status(500).json({ error: { message: err.message } });
   }
 });
@@ -246,7 +347,7 @@ app.post("/api/gemini/generate-subtitle", async (req, res) => {
     const subtitle = await generateSubtitle(title);
     res.json({ data: { subtitle } });
   } catch (err) {
-    console.error("Generate subtitle error:", err);
+    logger.error("Generate subtitle error:", err);
     res.status(500).json({ error: { message: err.message } });
   }
 });
@@ -256,7 +357,7 @@ app.post("/api/gemini/generate-content", async (req, res) => {
     const content = await generateContent(req.body);
     res.json({ data: { content } });
   } catch (err) {
-    console.error("Generate content error:", err);
+    logger.error("Generate content error:", err);
     res.status(500).json({ error: { message: err.message } });
   }
 });
@@ -266,8 +367,169 @@ app.post("/api/gemini/generate-all", async (req, res) => {
     const result = await generateAllSections(req.body);
     res.json({ data: result });
   } catch (err) {
-    console.error("Generate all error:", err);
+    logger.error("Generate all error:", err);
     res.status(500).json({ error: { message: err.message } });
+  }
+});
+
+// authentication routes middleware
+
+// POST /api/auth/signup
+app.post(
+  "/api/auth/signup",
+  [
+    body("name").trim().notEmpty().withMessage("Name is required"),
+    body("email").isEmail().withMessage("Valid email is required"),
+    body("password")
+      .isLength({ min: 8 })
+      .withMessage("Password must be at least 8 characters"),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty())
+      return res
+        .status(400)
+        .json({ error: "Validation failed", details: errors.array() });
+
+    const { name, email, password } = req.body;
+    try {
+      const existing = await User.findOne({ email });
+      if (existing)
+        return res.status(409).json({ error: "Email already in use" });
+
+      const passwordHash = await bcrypt.hash(password, 12);
+      const user = new User({ name, email, passwordHash });
+      await user.save();
+
+      const accessToken = createAccessToken(user);
+      const refreshToken = createRefreshToken(user);
+      user.refreshToken = refreshToken;
+      await user.save();
+
+      // set HttpOnly refresh cookie
+      res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: REFRESH_TOKEN_EXPIRES_DAYS * 24 * 60 * 60 * 1000,
+      });
+
+      res.status(201).json({
+        user: { id: user._id, name: user.name, email: user.email },
+        accessToken,
+      });
+    } catch (err) {
+      logger.error("Signup error:", err);
+      res.status(500).json({ error: "Failed to create account" });
+    }
+  }
+);
+
+// POST /api/auth/login
+app.post(
+  "/api/auth/login",
+  [
+    body("email").isEmail().withMessage("Valid email is required"),
+    body("password").notEmpty().withMessage("Password is required"),
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty())
+      return res
+        .status(400)
+        .json({ error: "Validation failed", details: errors.array() });
+
+    const { email, password } = req.body;
+    try {
+      const user = await User.findOne({ email });
+      if (!user) return res.status(401).json({ error: "Invalid credentials" });
+
+      const match = await bcrypt.compare(password, user.passwordHash);
+      if (!match) return res.status(401).json({ error: "Invalid credentials" });
+
+      const accessToken = createAccessToken(user);
+      const refreshToken = createRefreshToken(user);
+      user.refreshToken = refreshToken;
+      await user.save();
+
+      res.cookie("refreshToken", refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: REFRESH_TOKEN_EXPIRES_DAYS * 24 * 60 * 60 * 1000,
+      });
+
+      res.json({
+        user: { id: user._id, name: user.name, email: user.email },
+        accessToken,
+      });
+    } catch (err) {
+      logger.error("Login error:", err);
+      res.status(500).json({ error: "Login failed" });
+    }
+  }
+);
+
+// POST /api/auth/refresh
+app.post("/api/auth/refresh", async (req, res) => {
+  try {
+    const token = req.cookies?.refreshToken;
+    if (!token) return res.status(401).json({ error: "Missing refresh token" });
+
+    let payload;
+    try {
+      payload = jwt.verify(token, REFRESH_TOKEN_SECRET);
+    } catch (err) {
+      return res.status(401).json({ error: "Invalid refresh token" });
+    }
+
+    const user = await User.findById(payload.userId);
+    if (!user || user.refreshToken !== token) {
+      return res.status(401).json({ error: "Refresh token mismatch" });
+    }
+
+    // rotate tokens
+    const newAccessToken = createAccessToken(user);
+    const newRefreshToken = createRefreshToken(user);
+    user.refreshToken = newRefreshToken;
+    await user.save();
+
+    res.cookie("refreshToken", newRefreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: REFRESH_TOKEN_EXPIRES_DAYS * 24 * 60 * 60 * 1000,
+    });
+
+    res.json({ accessToken: newAccessToken });
+  } catch (err) {
+    logger.error("Refresh error:", err);
+    res.status(500).json({ error: "Could not refresh token" });
+  }
+});
+// POST /api/auth/logout
+app.post("/api/auth/logout", async (req, res) => {
+  try {
+    const token = req.cookies?.refreshToken;
+    if (token) {
+      try {
+        const payload = jwt.verify(token, REFRESH_TOKEN_SECRET);
+        await User.findByIdAndUpdate(payload.userId, {
+          $unset: { refreshToken: 1 },
+        });
+      } catch (e) {
+        // ignore invalid token
+      }
+    }
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      sameSite: "strict",
+      secure: process.env.NODE_ENV === "production",
+    });
+    res.json({ message: "Logged out" });
+  } catch (err) {
+    logger.error("Logout error:", err);
+    res.status(500).json({ error: "Logout failed" });
   }
 });
 
@@ -283,12 +545,46 @@ app.post("/api/issues", async (req, res) => {
     await issue.save();
     res.status(201).json(issue);
   } catch (err) {
-    console.error("Save issue error:", err);
+    logger.error("Save issue error:", err);
     res
       .status(500)
       .json({ error: "Failed to save issue", details: err.message });
   }
 });
+// validate issue
+app.post(
+  "/api/issues",
+  [
+    body("title").trim().notEmpty().withMessage("Title is required"),
+    body("volume").trim().notEmpty().withMessage("Volume is required"),
+    body("issueNumber")
+      .trim()
+      .notEmpty()
+      .withMessage("Issue number is required"),
+    // optional: validate images structure length/type if sending JSON
+  ],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res
+        .status(400)
+        .json({ error: "Validation failed", details: errors.array() });
+    }
+    try {
+      const issue = new Issue({
+        ...req.body,
+        updatedAt: new Date(),
+      });
+      await issue.save();
+      res.status(201).json(issue);
+    } catch (err) {
+      logger.error("Save issue error:", err);
+      res
+        .status(500)
+        .json({ error: "Failed to save issue", details: err.message });
+    }
+  }
+);
 
 // Get all issues
 app.get("/api/issues", async (req, res) => {
@@ -296,22 +592,36 @@ app.get("/api/issues", async (req, res) => {
     const issues = await Issue.find().sort({ createdAt: -1 });
     res.json(issues);
   } catch (err) {
-    console.error("Fetch issues error:", err);
+    logger.error("Fetch issues error:", err);
     res.status(500).json({ error: "Failed to fetch issues" });
   }
 });
+// get the latest issues
+app.get("/api/issues/latest", async (req, res) => {
+  try {
+    // newest first, limit 3
+    const docs = await Issue.find()
+      .sort({ createdAt: -1 })
+      .limit(3)
+      .lean();
+    res.json(docs);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+
+})
 
 // Get single issue by ID
 app.get("/api/issues/:id", async (req, res) => {
   try {
-    console.log("🧭 Fetching issue with ID:", req.params.id); // <--- ADD THIS
+    logger.log("🧭 Fetching issue with ID:", req.params.id); // <--- ADD THIS
     const issue = await Issue.findById(req.params.id);
     if (!issue) {
       return res.status(404).json({ error: "Issue not found" });
     }
     res.json(issue);
   } catch (err) {
-    console.error("Fetch issue error:", err);
+    logger.error("Fetch issue error:", err);
     res
       .status(500)
       .json({ error: "Failed to fetch issue", details: err.message });
@@ -331,7 +641,7 @@ app.put("/api/issues/:id", async (req, res) => {
     }
     res.json(issue);
   } catch (err) {
-    console.error("Update issue error:", err);
+    logger.error("Update issue error:", err);
     res.status(500).json({ error: "Failed to update issue" });
   }
 });
@@ -345,7 +655,7 @@ app.delete("/api/issues/:id", async (req, res) => {
     }
     res.json({ message: "Issue deleted successfully", issue });
   } catch (err) {
-    console.error("Delete issue error:", err);
+    logger.error("Delete issue error:", err);
     res.status(500).json({ error: "Failed to delete issue" });
   }
 });
@@ -355,22 +665,24 @@ app.delete("/api/issues/:id", async (req, res) => {
 app.get("/api/music/search", async (req, res) => {
   try {
     const query = req.query.q || "lofi";
-    const deezerUrl = `https://api.deezer.com/search?q=${encodeURIComponent(query)}`;
-    
+    const deezerUrl = `https://api.deezer.com/search?q=${encodeURIComponent(
+      query
+    )}`;
+
     const response = await fetch(deezerUrl);
     if (!response.ok) {
       throw new Error("Failed to fetch from Deezer API");
     }
-    
+
     const data = await response.json();
     res.json(data);
   } catch (error) {
-    console.error("Music search error:", error);
-    res.status(500).json({ error: "Failed to search music", details: error.message });
+    logger.error("Music search error:", error);
+    res
+      .status(500)
+      .json({ error: "Failed to search music", details: error.message });
   }
 });
-
-
 
 const PORT = process.env.PORT || 5000;
 
@@ -379,17 +691,38 @@ if (MONGODB_URI) {
   mongoose
     .connect(MONGODB_URI)
     .then(() => {
-      console.log("✅ Connected to MongoDB");
+      logger.info("✅ Connected to MongoDB");
       app.listen(PORT, () => {
-        console.log(`✅ Server running on port ${PORT}`);
-        console.log(`   http://localhost:${PORT}`);
+        logger.info(`✅ Server running on port ${PORT}`);
+        logger.info(`   http://localhost:${PORT}`);
       });
     })
     .catch((err) => {
-      console.error("❌ MongoDB connection error:", err);
+      logger.error(`❌ MongoDB connection error: ${err.message}`);
       process.exit(1);
     });
 } else {
-  console.error("❌ MONGODB_URI not found in environment variables");
+  logger.error("❌ MONGODB_URI not found in environment variables");
   process.exit(1);
 }
+// 404 handler
+app.use((req, res) => {
+  res.status(404).json({ error: "Not found" });
+});
+app.use((err, req, res, next) => {
+  logger.error(err.stack);
+  res.status(500).json({
+    error:
+      process.env.NODE_ENV === "production"
+        ? "Something went wrong"
+        : err.message,
+  });
+});
+// Health check
+app.get("/api/health", (req, res) => {
+  res.json({
+    status: "ok",
+    geminiConfigured: !!GEMINI_API_KEY,
+    mongodbConfigured: !!MONGODB_URI,
+  });
+});

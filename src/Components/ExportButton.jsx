@@ -1,9 +1,12 @@
 // components/ExportButton.jsx
 import { useState } from "react";
+import { useTheme } from "../Components/ThemeContext";
 
 const ExportButton = ({ issue, pages, className = "" }) => {
   const [exporting, setExporting] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+   const { theme, toggleTheme } = useTheme();
+  const darkMode = theme === "dark";
 
   const exportToPDF = async () => {
     setExporting(true);
@@ -190,7 +193,8 @@ Exported on: ${new Date().toLocaleDateString()}
       <button
         onClick={() => setMenuOpen(!menuOpen)}
         disabled={exporting}
-        className={`px-3 py-1 border-2 border-black bg-white hover:bg-gray-100 disabled:bg-gray-300 disabled:cursor-not-allowed dark:bg-gray-800 dark:border-gray-300 dark:hover:bg-gray-700 dark:disabled:bg-gray-600 ${className}`}
+        className={`px-3 py-1 border-2 border-black bg-white hover:bg-gray-100 disabled:bg-gray-300 disabled:cursor-not-allowed dark:bg-gray-800 
+          dark:border-gray-300 dark:hover:bg-gray-700 dark:disabled:bg-gray-600 ${className}  ${darkMode ? "text-gray-200" : "bg-black text-white"}`}
         style={{
           boxShadow: exporting ? "none" : "2px 2px 0px black",
           fontSize: "0.8rem",
@@ -209,7 +213,7 @@ Exported on: ${new Date().toLocaleDateString()}
               setMenuOpen(false);
               exportToPDF();
             }}
-            className="block w-full px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700"
+            className={`block w-full px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700  ${darkMode ? "text-gray-200" : "bg-black text-white"}`}
             style={{ fontSize: "0.8rem" }}
           >
             Export as PDF
@@ -219,7 +223,7 @@ Exported on: ${new Date().toLocaleDateString()}
               setMenuOpen(false);
               exportToText();
             }}
-            className="block w-full px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700"
+            className={`"block w-full px-3 py-2 text-left hover:bg-gray-100 dark:hover:bg-gray-700"  ${darkMode ? "text-gray-200" : "bg-black text-white"}`}
             style={{ fontSize: "0.8rem" }}
           >
             Export as Text

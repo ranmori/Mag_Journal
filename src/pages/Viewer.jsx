@@ -2,9 +2,10 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { gsap } from "gsap";
 import { useTheme } from "../Components/ThemeContext";
-import Sidebar from "../Components/Sidebar";
 import ExportButton from "../Components/ExportButton";
 import AudioPlayer from "../Components/AudioPage"; // ADD THIS IMPORT
+import SkeletonGrid from "../Components/SkeletonGrid"
+import { useLoader } from "../Components/LoaderContext";
 const Button = ({ onClick, disabled, className, children }) => (
   <button
     onClick={onClick}
@@ -24,7 +25,7 @@ export default function ViewerPage() {
   const navigate = useNavigate();
 
   const [issue, setIssue] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { setLoading} = useLoader();
   const [error, setError] = useState(null);
   const { theme, toggleTheme } = useTheme();
   const darkMode = theme === "dark";
@@ -59,17 +60,19 @@ export default function ViewerPage() {
   }, [issueId]);
 
   // If still loading
-  if (loading) {
-    return (
-      <div
-        className={`flex flex-2 items-center justify-center h-screen ${
-          darkMode ? "text-gray-200" : "text-gray-800"
-        } font-bold`}
-      >
-        ⏳ Loading issue...
-      </div>
-    );
-  }
+  // if (loading) {
+  //   return (
+  //     <div
+  //       className={`fixed inset-0 h-screen items-center justify-center   ${
+  //         darkMode ? "text-gray-200" : "text-gray-800"
+  //       } font-bold`}
+  //     >
+        
+  //          ........
+  //         <SkeletonGrid rows={2} cardsPerRow={6} />;
+  //     </div>
+  //   );
+  // }
 
   // If there was an error
   if (error) {
@@ -91,7 +94,7 @@ export default function ViewerPage() {
   if (!issue) {
     return (
       <div
-        className={`flex flex-col items-center justify-center h-screen ${
+        className={` fixed inset-0 flex-col items-center justify-center h-screen ${
           darkMode ? "text-gray-200" : "text-gray-800"
         } font-bold`}
       >
@@ -290,7 +293,6 @@ export default function ViewerPage() {
 
   return (
     <div className="flex min-h-screen">
-      <Sidebar />
       <div
         className={`fixed inset-0 p-4 border-black h-screen font-retro ${
           darkMode ? "bg-gray-700" : "bg-gray-400"
