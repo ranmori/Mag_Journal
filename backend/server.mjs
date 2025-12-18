@@ -12,49 +12,64 @@ import winston from "winston";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import { body, validationResult } from "express-validator";
-import { fileURLToPath} from "url";
+import { fileURLToPath } from "url";
 import path from "path";
 
 // logger
 
 // ============== WINSTON LOGGER SETUP ==============
 const logger = winston.createLogger({
-  level: process.env.LOG_LEVEL || 'info',
+  level: process.env.LOG_LEVEL || "info",
   format: winston.format.combine(
-    winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+    winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
     winston.format.errors({ stack: true }),
     winston.format.json()
   ),
   transports: [
-    new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
-    new winston.transports.File({ filename: 'logs/combined.log' }),
+    new winston.transports.File({ filename: "logs/error.log", level: "error" }),
+    new winston.transports.File({ filename: "logs/combined.log" }),
   ],
 });
 
-if (process.env.NODE_ENV !== 'production') {
-  logger.add(new winston.transports.Console({
-    format: winston.format.combine(
-      winston.format.colorize(),
-      winston.format.simple()
-    ),
-  }));
+if (process.env.NODE_ENV !== "production") {
+  logger.add(
+    new winston.transports.Console({
+      format: winston.format.combine(
+        winston.format.colorize(),
+        winston.format.simple()
+      ),
+    })
+  );
 }
-
-
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+logger.log("Current directory:", __dirname);
+logger.log("File location:", __filename);
 
-logger.log('Current directory:', __dirname);
-logger.log('File location:', __filename);
-
-const envPath = path.join(__dirname, '..', '.env');
+const envPath = path.join(__dirname, "..", ".env");
 
 dotenv.config({ path: envPath });
 const app = express();
 const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || "http://localhost:5173";
-app.use(cors({ origin: FRONTEND_ORIGIN }));
+// Support multiple allowed frontend origins via comma-separated env var
+const FRONTEND_ORIGINS = (process.env.FRONTEND_ORIGINS || FRONTEND_ORIGIN)
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+
+const corsOptions = {
+  origin(origin, callback) {
+    // allow requests with no origin (like curl, Postman, or server-to-server)
+    if (!origin) return callback(null, true);
+    if (FRONTEND_ORIGINS.indexOf(origin) !== -1) return callback(null, true);
+    return callback(new Error("CORS policy: Origin not allowed"));
+  },
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
 app.use(express.json({ limit: "10mb" })); // Increase limit for base64 images
 app.use(helmet());
 app.use(compression());
@@ -67,16 +82,14 @@ const limiter = rateLimit({
 });
 app.use("/api/", limiter);
 
-
 // logger
-
 
 // request logging
 if (process.env.NODE_ENV !== "test") {
   app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 }
 
-const MONGODB_URI = process.env.MONGODB_URI 
+const MONGODB_URI = process.env.MONGODB_URI;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 // JWT TOKENS
 const JWT_SECRET = process.env.JWT_SECRET || "change_this_in_production";
@@ -600,16 +613,12 @@ app.get("/api/issues", async (req, res) => {
 app.get("/api/issues/latest", async (req, res) => {
   try {
     // newest first, limit 3
-    const docs = await Issue.find()
-      .sort({ createdAt: -1 })
-      .limit(3)
-      .lean();
+    const docs = await Issue.find().sort({ createdAt: -1 }).limit(3).lean();
     res.json(docs);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
-
-})
+});
 
 // Get single issue by ID
 app.get("/api/issues/:id", async (req, res) => {
