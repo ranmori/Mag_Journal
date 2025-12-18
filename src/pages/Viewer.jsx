@@ -4,7 +4,7 @@ import { gsap } from "gsap";
 import { useTheme } from "../Components/ThemeContext";
 import ExportButton from "../Components/ExportButton";
 import AudioPlayer from "../Components/AudioPage"; // ADD THIS IMPORT
-import SkeletonGrid from "../Components/SkeletonGrid"
+import SkeletonGrid from "../Components/SkeletonGrid";
 import { useLoader } from "../Components/LoaderContext";
 const Button = ({ onClick, disabled, className, children }) => (
   <button
@@ -25,7 +25,7 @@ export default function ViewerPage() {
   const navigate = useNavigate();
 
   const [issue, setIssue] = useState(null);
-  const { setLoading} = useLoader();
+  const { setLoading } = useLoader();
   const [error, setError] = useState(null);
   const { theme, toggleTheme } = useTheme();
   const darkMode = theme === "dark";
@@ -37,15 +37,14 @@ export default function ViewerPage() {
   const shadowRef = useRef(null);
   const backRef = useRef(null);
 
-
-
+  const API_BASE_URL = import.meta.env.VITE_API_URL;
 
   // Fetch issue content from backend
   useEffect(() => {
     console.log("🧭 issueId from URL:", issueId);
     const fetchIssue = async () => {
       try {
-        const res = await fetch(`http://localhost:5000/api/issues/${issueId}`);
+        const res = await fetch(`${API_BASE_URL}/api/issues/${issueId}`);
         if (!res.ok) throw new Error("Failed to load issue");
         const data = await res.json();
         console.log("🧠 Loaded issue from backend:", data);
@@ -67,7 +66,7 @@ export default function ViewerPage() {
   //         darkMode ? "text-gray-200" : "text-gray-800"
   //       } font-bold`}
   //     >
-        
+
   //          ........
   //         <SkeletonGrid rows={2} cardsPerRow={6} />;
   //     </div>
@@ -326,7 +325,7 @@ export default function ViewerPage() {
               }`}
               style={{ boxShadow: "2px 2px 0px black" }}
             >
-             {theme === "dark" ? "☀️" : "🌙"}
+              {theme === "dark" ? "☀️" : "🌙"}
             </button>
           </div>
 

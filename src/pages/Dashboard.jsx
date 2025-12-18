@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTheme } from "../Components/ThemeContext";
-import image1 from "../assets/bg1.jpg";
-import image2 from "../assets/bg2.jpg";
+// import image1 from "../assets/bg1.jpg";
+// import image2 from "../assets/bg2.jpg";
 // import Sidebar from "../Components/Sidebar"
 import Button from "../Components/Button";
-import IssueEditor from "./IssueEditor"
+import IssueEditor from "./IssueEditor";
 
 // Responsive Dashboard Component
 export default function Dashboard() {
@@ -42,17 +42,18 @@ export default function Dashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
+  const API_BASE_URL = import.meta.env.VITE_API_URL;
   // issue fetcher
   /* 1️⃣  grab real issues once */
   useEffect(() => {
-    fetch("http://localhost:5000/api/issues/latest")
+    fetch(`${API_BASE_URL}/api/issues/latest`)
       .then((r) => r.json())
       .then((data) => {
-        setIssues(data);   // ← same shape as before
+        setIssues(data); // ← same shape as before
         setLoading(false);
       })
       .catch(() => {
-        setIssues([]);     // fail-safe
+        setIssues([]); // fail-safe
         setLoading(false);
       });
   }, []);
@@ -81,7 +82,8 @@ export default function Dashboard() {
       <div
         className="flex-1 min-h-screen bg-cover bg-center transition-all duration-1000 relative"
         style={{
-          backgroundColor: theme === "dark" ? "#1a1a1a" : bgColors[currentImageIndex],
+          backgroundColor:
+            theme === "dark" ? "#1a1a1a" : bgColors[currentImageIndex],
         }}
       >
         <div
@@ -195,7 +197,9 @@ export default function Dashboard() {
                   theme === "dark" ? "text-white" : "text-black"
                 }`}
               >
-                <h2 className="text-base sm:text-lg font-bold mb-2">Recent Issues</h2>
+                <h2 className="text-base sm:text-lg font-bold mb-2">
+                  Recent Issues
+                </h2>
                 <p className="text-xs sm:text-sm opacity-70">
                   Showing your 6 most recent journal entries
                 </p>
@@ -239,7 +243,8 @@ export default function Dashboard() {
                           theme === "dark" ? "text-gray-500" : "text-gray-500"
                         }`}
                       >
-                        Created: {new Date(issue.createdAt).toLocaleDateString()}
+                        Created:{" "}
+                        {new Date(issue.createdAt).toLocaleDateString()}
                       </p>
                     </div>
                     <div className="flex justify-center gap-2 flex-wrap">
@@ -275,7 +280,7 @@ export default function Dashboard() {
               {/* View All Link */}
               <div className="mt-6 sm:mt-8 text-center">
                 <button
-                  onClick={() =>navigate("/LibraryPage")}
+                  onClick={() => navigate("/LibraryPage")}
                   className={`w-full sm:w-auto px-4 sm:px-6 py-2 sm:py-3 border-2 border-black font-bold text-sm sm:text-base transition-colors ${
                     theme === "dark"
                       ? "bg-gray-800 hover:bg-gray-700 text-white"

@@ -1,5 +1,3 @@
-
-
 // services/geminiApi.js
 // Frontend service for calling the Gemini API backend
 
@@ -8,7 +6,8 @@
  * For development: http://localhost:5000/api/gemini
  * For production: https://your-backend-domain.com/api/gemini
  */
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/gemini';
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || "http://localhost:5000/api/gemini";
 
 /**
  * Generic API call function with error handling
@@ -19,9 +18,9 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/
 const callAPI = async (endpoint, data) => {
   try {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify(data),
     });
@@ -29,13 +28,13 @@ const callAPI = async (endpoint, data) => {
     const responseData = await response.json();
 
     if (!response.ok) {
-      throw new Error(responseData.error?.message || 'API request failed');
+      throw new Error(responseData.error?.message || "API request failed");
     }
 
     return responseData.data;
   } catch (error) {
     console.error(`API Error (${endpoint}):`, error);
-    throw new Error(error.message || 'Failed to connect to AI service');
+    throw new Error(error.message || "Failed to connect to AI service");
   }
 };
 
@@ -44,7 +43,7 @@ const callAPI = async (endpoint, data) => {
  * @returns {Promise<string>} - Generated title
  */
 export const generateTitle = async () => {
-  const data = await callAPI('/generate-title', {});
+  const data = await callAPI("/generate-title", {});
   return data.title;
 };
 
@@ -54,7 +53,7 @@ export const generateTitle = async () => {
  * @returns {Promise<string>} - Generated subtitle
  */
 export const generateSubtitle = async (title) => {
-  const data = await callAPI('/generate-subtitle', { title });
+  const data = await callAPI("/generate-subtitle", { title });
   return data.subtitle;
 };
 
@@ -68,8 +67,14 @@ export const generateSubtitle = async (title) => {
  * @param {string} params.issueNumber - Issue number
  * @returns {Promise<string>} - Generated content
  */
-export const generateContent = async ({ type, title, subtitle, volume, issueNumber }) => {
-  const data = await callAPI('/generate-content', {
+export const generateContent = async ({
+  type,
+  title,
+  subtitle,
+  volume,
+  issueNumber,
+}) => {
+  const data = await callAPI("/generate-content", {
     type,
     title,
     subtitle,
@@ -88,7 +93,7 @@ export const generateContent = async ({ type, title, subtitle, volume, issueNumb
  * @returns {Promise<string>} - Generated image description
  */
 export const generateImageDescription = async ({ title, subtitle, layout }) => {
-  const data = await callAPI('/generate-image-description', {
+  const data = await callAPI("/generate-image-description", {
     title,
     subtitle,
     layout,
@@ -105,8 +110,13 @@ export const generateImageDescription = async ({ title, subtitle, layout }) => {
  * @param {string} params.issueNumber - Issue number
  * @returns {Promise<Object>} - Object containing foreword, reflections, and lessons
  */
-export const generateAllSections = async ({ title, subtitle, volume, issueNumber }) => {
-  const data = await callAPI('/generate-all', {
+export const generateAllSections = async ({
+  title,
+  subtitle,
+  volume,
+  issueNumber,
+}) => {
+  const data = await callAPI("/generate-all", {
     title,
     subtitle,
     volume,

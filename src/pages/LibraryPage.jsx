@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 // import Sidebar from "../Components/Sidebar";
 import { useTheme } from "../Components/ThemeContext";
-import SkeletonGrid from "../Components/SkeletonGrid"
+import SkeletonGrid from "../Components/SkeletonGrid";
 import { useLoader } from "../Components/LoaderContext";
 
 const Button = ({ onClick, disabled, className, children, variant }) => (
@@ -25,7 +25,7 @@ export default function LibraryPage() {
   const { theme } = useTheme();
   const isDark = theme === "dark";
   const [issues, setIssues] = useState([]);
-  const { setLoading} = useLoader();
+  const { setLoading } = useLoader();
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedLayout, setSelectedLayout] = useState("all");
@@ -38,11 +38,12 @@ export default function LibraryPage() {
     { id: "fashion", name: "Fashion", icon: "👗" },
   ];
 
+  const API_BASE_URL = import.meta.env.VITE_API_BASE || "http://localhost:5000";
   const fetchIssues = React.useCallback(async () => {
     setError(null);
     setLoading(true);
     try {
-      const res = await fetch("http://localhost:5000/api/issues");
+      const res = await fetch(`${API_BASE_URL}/api/issues`);
       if (!res.ok) throw new Error("Failed to fetch issues");
       const data = await res.json();
       setIssues(data);
@@ -61,7 +62,7 @@ export default function LibraryPage() {
     if (!window.confirm("Are you sure you want to delete this issue?")) return;
 
     try {
-      const res = await fetch(`http://localhost:5000/api/issues/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/issues/${id}`, {
         method: "DELETE",
       });
       if (!res.ok) throw new Error("Failed to delete issue");
@@ -129,17 +130,13 @@ export default function LibraryPage() {
   if (error) {
     return (
       <div
-        className={`min-h-screen flex ${
-          isDark ? "bg-gray-900" : "bg-gray-50"
-        }`}
+        className={`min-h-screen flex ${isDark ? "bg-gray-900" : "bg-gray-50"}`}
       >
         <div className="flex-1 p-8 overflow-y-auto flex items-center justify-center">
           <div className="text-center">
             <div className="text-6xl mb-4">❌</div>
             <div
-              className={`text-xl mb-4 ${
-                isDark ? "text-white" : "text-black"
-              }`}
+              className={`text-xl mb-4 ${isDark ? "text-white" : "text-black"}`}
             >
               {error}
             </div>
@@ -152,9 +149,7 @@ export default function LibraryPage() {
 
   return (
     <div
-      className={`min-h-screen flex ${
-        isDark ? "bg-gray-900" : "bg-gray-50"
-      }`}
+      className={`min-h-screen flex ${isDark ? "bg-gray-900" : "bg-gray-50"}`}
     >
       <div className="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto min-h-screen">
         <div className="max-w-7xl mx-auto w-full">
@@ -255,9 +250,7 @@ export default function LibraryPage() {
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
                 className={`w-full sm:w-auto px-2 sm:px-3 py-1.5 sm:py-2 border-2 border-black text-xs sm:text-sm ${
-                  isDark
-                    ? "bg-gray-700 text-white"
-                    : "bg-white text-black"
+                  isDark ? "bg-gray-700 text-white" : "bg-white text-black"
                 }`}
                 style={{ boxShadow: "2px 2px 0px black" }}
               >
