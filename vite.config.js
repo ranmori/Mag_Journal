@@ -3,7 +3,7 @@ import react from "@vitejs/plugin-react-swc";
 import tailwindcss from "@tailwindcss/vite";
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
   plugins: [react(), tailwindcss()],
   test: {
     environment: "jsdom",
@@ -24,16 +24,16 @@ export default defineConfig({
     rollupOptions: {
       output: {
         // Remove console.logs in production
-        ...(mode === 'production' && {
+        ...(mode === "production" && {
           manualChunks: undefined,
         }),
       },
     },
-    minify: 'terser',
+    minify: "terser",
     terserOptions: {
       compress: {
         // Remove console.* calls in production
-        drop_console: mode === 'production',
+        drop_console: mode === "production",
         drop_debugger: true,
       },
     },
@@ -82,4 +82,4 @@ export default defineConfig({
       },
     },
   },
-});
+}));
