@@ -28,6 +28,8 @@ export default function IssueEditor() {
   const fileInputRef = useRef(null);
   const [selectedMusicTrack, setSelectedMusicTrack] = useState(null);
 
+  const API_BASE_URL = import.meta.env.VITE_API_URL;
+
   useEffect(() => {
     if (id && id !== "new") {
       loadIssue(id);
@@ -37,7 +39,7 @@ export default function IssueEditor() {
   const loadIssue = async (issueId) => {
     try {
       setIsLoading(true);
-      const res = await fetch(`http://localhost:5000/api/issues/${issueId}`);
+      const res = await fetch(`${API_BASE_URL}/api/issues/${issueId}`);
       if (!res.ok) throw new Error("Failed to load issue");
 
       const issue = await res.json();
@@ -131,7 +133,7 @@ export default function IssueEditor() {
         images: uploadedImage ? [uploadedImage] : [],
         musicTrack: selectedMusicTrack,
       };
-      const res = await fetch("http://localhost:5000/api/issues", {
+      const res = await fetch(`${API_BASE_URL}/api/issues`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(issueData),

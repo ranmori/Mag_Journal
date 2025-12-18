@@ -27,12 +27,15 @@ export default function RetroAudioPlayer({
   const [isExpanded, setIsExpanded] = useState(false);
   const audioRef = useRef(null);
   // Determine dark mode: prefer prop if provided, otherwise use media query
+
+  const API_BASE_URL = import.meta.env.VITE_API_BASE || "http://localhost:5000";
   const [prefersDark, setPrefersDark] = useState(
     typeof darkModeProp === "boolean"
       ? darkModeProp
       : window.matchMedia &&
           window.matchMedia("(prefers-color-scheme: dark)").matches
   );
+
   useEffect(() => {
     if (typeof darkModeProp === "boolean") {
       setPrefersDark(darkModeProp);
@@ -59,9 +62,7 @@ export default function RetroAudioPlayer({
   }, [darkModeProp]);
 
   useEffect(() => {
-    fetch(
-      `http://localhost:5000/api/music/search?q=${encodeURIComponent(query)}`
-    )
+    fetch(`${API_BASE_URL}/api/music/search?q=${encodeURIComponent(query)}`)
       .then((res) => res.json())
       .then((data) => {
         const results = data.data || [];
@@ -278,17 +279,21 @@ export default function RetroAudioPlayer({
         </div>
       ) : (
         // Expanded full player view
-        <div className={`border-4 max-w-md w-full ${
-          prefersDark
-            ? "bg-neutral-900 border-white shadow-[8px_8px_0px_0px_rgba(255,255,255,0.2)]"
-            : "bg-white border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]"
-        }`}>
-          {/* Header */}
-          <div className={`border-b-4 p-4 ${
+        <div
+          className={`border-4 max-w-md w-full ${
             prefersDark
-              ? "border-white bg-neutral-900 text-white"
-              : "border-black bg-white text-black"
-          }`}>
+              ? "bg-neutral-900 border-white shadow-[8px_8px_0px_0px_rgba(255,255,255,0.2)]"
+              : "bg-white border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]"
+          }`}
+        >
+          {/* Header */}
+          <div
+            className={`border-b-4 p-4 ${
+              prefersDark
+                ? "border-white bg-neutral-900 text-white"
+                : "border-black bg-white text-black"
+            }`}
+          >
             <div className="flex items-center justify-between mb-3">
               <h1 className="text-2xl font-bold tracking-tight">MUSIC2D</h1>
               <button
@@ -301,9 +306,11 @@ export default function RetroAudioPlayer({
               </button>
             </div>
 
-            <div className={`flex items-center border-2 ${
-              prefersDark ? "border-white" : "border-black"
-            }`}>
+            <div
+              className={`flex items-center border-2 ${
+                prefersDark ? "border-white" : "border-black"
+              }`}
+            >
               <Search size={18} className="ml-2" />
               <input
                 type="text"
@@ -318,28 +325,36 @@ export default function RetroAudioPlayer({
           </div>
 
           {/* Cassette Tape */}
-          <div className={`p-8 ${
-            prefersDark
-              ? "bg-gradient-to-b from-gray-800 to-gray-900"
-              : "bg-gradient-to-b from-gray-100 to-gray-200"
-          }`}>
-            <div className={`border-4 p-6 relative ${
+          <div
+            className={`p-8 ${
               prefersDark
-                ? "bg-gray-800 border-white"
-                : "bg-gray-300 border-black"
-            }`}>
-              {/* Cassette top label */}
-              <div className={`border-2 p-3 mb-4 ${
+                ? "bg-gradient-to-b from-gray-800 to-gray-900"
+                : "bg-gradient-to-b from-gray-100 to-gray-200"
+            }`}
+          >
+            <div
+              className={`border-4 p-6 relative ${
                 prefersDark
-                  ? "bg-gray-900 border-white text-white"
-                  : "bg-white border-black text-black"
-              }`}>
-                <div className="text-center font-mono text-xs mb-1">SIDE A</div>
-                <div className={`h-8 border-2 flex items-center justify-center ${
+                  ? "bg-gray-800 border-white"
+                  : "bg-gray-300 border-black"
+              }`}
+            >
+              {/* Cassette top label */}
+              <div
+                className={`border-2 p-3 mb-4 ${
                   prefersDark
-                    ? "border-white bg-gray-800"
-                    : "border-black bg-gray-50"
-                }`}>
+                    ? "bg-gray-900 border-white text-white"
+                    : "bg-white border-black text-black"
+                }`}
+              >
+                <div className="text-center font-mono text-xs mb-1">SIDE A</div>
+                <div
+                  className={`h-8 border-2 flex items-center justify-center ${
+                    prefersDark
+                      ? "border-white bg-gray-800"
+                      : "border-black bg-gray-50"
+                  }`}
+                >
                   <div className="text-xs font-bold truncate px-2">
                     {currentTrack?.title?.toUpperCase() || "NO TRACK"}
                   </div>
@@ -363,11 +378,13 @@ export default function RetroAudioPlayer({
                 </div>
 
                 <div className="flex-1 mx-4 flex items-center justify-center">
-                  <div className={`h-8 w-full border-2 ${
-                    prefersDark
-                      ? "bg-gray-900 border-white"
-                      : "bg-gray-700 border-black"
-                  }`}></div>
+                  <div
+                    className={`h-8 w-full border-2 ${
+                      prefersDark
+                        ? "bg-gray-900 border-white"
+                        : "bg-gray-700 border-black"
+                    }`}
+                  ></div>
                 </div>
 
                 <div className="relative">
@@ -387,29 +404,37 @@ export default function RetroAudioPlayer({
 
               {/* Cassette holes */}
               <div className="flex justify-between px-8">
-                <div className={`w-4 h-4 rounded-sm ${
-                  prefersDark ? "bg-gray-900" : "bg-gray-800"
-                }`}></div>
-                <div className={`w-4 h-4 rounded-sm ${
-                  prefersDark ? "bg-gray-900" : "bg-gray-800"
-                }`}></div>
+                <div
+                  className={`w-4 h-4 rounded-sm ${
+                    prefersDark ? "bg-gray-900" : "bg-gray-800"
+                  }`}
+                ></div>
+                <div
+                  className={`w-4 h-4 rounded-sm ${
+                    prefersDark ? "bg-gray-900" : "bg-gray-800"
+                  }`}
+                ></div>
               </div>
             </div>
           </div>
 
           {/* Track Info */}
-          <div className={`border-t-4 p-6 ${
-            prefersDark
-              ? "border-white bg-neutral-900 text-white"
-              : "border-black bg-white text-black"
-          }`}>
+          <div
+            className={`border-t-4 p-6 ${
+              prefersDark
+                ? "border-white bg-neutral-900 text-white"
+                : "border-black bg-white text-black"
+            }`}
+          >
             <div className="mb-4">
               <h2 className="text-2xl font-bold mb-1 truncate">
                 {currentTrack?.title || "Loading..."}
               </h2>
-              <p className={`font-mono text-sm ${
-                prefersDark ? "text-gray-400" : "text-gray-600"
-              }`}>
+              <p
+                className={`font-mono text-sm ${
+                  prefersDark ? "text-gray-400" : "text-gray-600"
+                }`}
+              >
                 {currentTrack?.artist?.name || "Unknown Artist"}
               </p>
             </div>
@@ -428,8 +453,12 @@ export default function RetroAudioPlayer({
                       key={i}
                       className={`flex-1 transition-colors ${
                         isPast
-                          ? prefersDark ? "bg-white" : "bg-black"
-                          : prefersDark ? "bg-gray-700" : "bg-gray-300"
+                          ? prefersDark
+                            ? "bg-white"
+                            : "bg-black"
+                          : prefersDark
+                          ? "bg-gray-700"
+                          : "bg-gray-300"
                       }`}
                       style={{ height: `${height}%` }}
                     ></div>
@@ -440,11 +469,13 @@ export default function RetroAudioPlayer({
             </div>
 
             {/* Progress bar */}
-            <div className={`w-full h-1 border mb-6 ${
-              prefersDark
-                ? "bg-gray-700 border-white"
-                : "bg-gray-300 border-black"
-            }`}>
+            <div
+              className={`w-full h-1 border mb-6 ${
+                prefersDark
+                  ? "bg-gray-700 border-white"
+                  : "bg-gray-300 border-black"
+              }`}
+            >
               <div
                 className={`h-full transition-all ${
                   prefersDark ? "bg-white" : "bg-black"
@@ -475,7 +506,7 @@ export default function RetroAudioPlayer({
                     : "border-black bg-white text-black hover:bg-gray-100"
                 }`}
               >
-                 {isPlaying ? "⏸" : "▶"}
+                {isPlaying ? "⏸" : "▶"}
               </button>
 
               <button
@@ -498,7 +529,11 @@ export default function RetroAudioPlayer({
                 className="flex items-center gap-2 hover:scale-110 transition-transform"
               >
                 ♥
-                <Heart size={20} fill={liked ? (prefersDark ? "white" : "black") : "none"} stroke={prefersDark ? "white" : "black"} />
+                <Heart
+                  size={20}
+                  fill={liked ? (prefersDark ? "white" : "black") : "none"}
+                  stroke={prefersDark ? "white" : "black"}
+                />
                 <span className="text-sm font-mono">392</span>
               </button>
 
