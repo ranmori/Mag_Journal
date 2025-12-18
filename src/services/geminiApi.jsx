@@ -7,7 +7,7 @@
  * For production: https://your-backend-domain.com/api/gemini
  */
 const API_BASE_URL =
-  import.meta.env.VITE_API_URL || "http://localhost:5000/api/gemini";
+  import.meta.env.VITE_API_BASE || "http://localhost:5000/api/gemini";
 
 /**
  * Generic API call function with error handling
