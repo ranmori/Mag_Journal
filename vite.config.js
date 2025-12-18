@@ -29,13 +29,9 @@ export default defineConfig(({ mode }) => ({
         }),
       },
     },
-    minify: "terser",
-    terserOptions: {
-      compress: {
-        // Remove console.* calls in production
-        drop_console: mode === "production",
-        drop_debugger: true,
-      },
+    minify: "esbuild",
+    esbuild: {
+      drop: mode === "production" ? ["console", "debugger"] : [],
     },
   },
   daisyui: {
