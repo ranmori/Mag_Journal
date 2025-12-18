@@ -317,8 +317,9 @@ const userSchema = new mongoose.Schema({
   },
   passwordHash: { type: String, required: true },
 });
+const User = mongoose.model("User", userSchema);
 const createAccessToken = (user) =>
-  jwt.sign({ userId: user._1d || user._id, email: user.email }, JWT_SECRET, {
+  jwt.sign({ userId: user._id || user._id, email: user.email }, JWT_SECRET, {
     expiresIn: ACCESS_TOKEN_EXPIRES,
   });
 
