@@ -317,8 +317,9 @@ const userSchema = new mongoose.Schema({
   },
   passwordHash: { type: String, required: true },
 });
+const User = mongoose.model("User", userSchema);
 const createAccessToken = (user) =>
-  jwt.sign({ userId: user._1d || user._id, email: user.email }, JWT_SECRET, {
+  jwt.sign({ userId: user._id || user._id, email: user.email }, JWT_SECRET, {
     expiresIn: ACCESS_TOKEN_EXPIRES,
   });
 
@@ -342,6 +343,16 @@ const authenticateToken = (req, res, next) => {
 };
 
 // ============== API ROUTES ==============
+
+// Health check
+app.get("/api/health", (req, res) => {
+  res.json({
+    status: "ok",
+    geminiConfigured: !!GEMINI_API_KEY,
+    mongodbConfigured: !!MONGODB_URI,
+  });
+});
+
 
 // ===== GEMINI AI ROUTES =====
 app.post("/api/gemini/generate-title", async (req, res) => {
@@ -714,6 +725,7 @@ if (MONGODB_URI) {
   logger.error("❌ MONGODB_URI not found in environment variables");
   process.exit(1);
 }
+
 // 404 handler
 app.use((req, res) => {
   res.status(404).json({ error: "Not found" });
@@ -727,11 +739,4 @@ app.use((err, req, res, next) => {
         : err.message,
   });
 });
-// Health check
-app.get("/api/health", (req, res) => {
-  res.json({
-    status: "ok",
-    geminiConfigured: !!GEMINI_API_KEY,
-    mongodbConfigured: !!MONGODB_URI,
-  });
-});
+
