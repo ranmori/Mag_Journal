@@ -43,7 +43,7 @@ const callAPI = async (endpoint, data) => {
  * @returns {Promise<string>} - Generated title
  */
 export const generateTitle = async () => {
-  const data = await callAPI("/generate-title", {});
+  const data = await callAPI("/api/gemini/generate-title", {});
   return data.title;
 };
 
@@ -53,7 +53,7 @@ export const generateTitle = async () => {
  * @returns {Promise<string>} - Generated subtitle
  */
 export const generateSubtitle = async (title) => {
-  const data = await callAPI("/generate-subtitle", { title });
+  const data = await callAPI("/api/gemini/generate-subtitle", { title });
   return data.subtitle;
 };
 
@@ -74,7 +74,7 @@ export const generateContent = async ({
   volume,
   issueNumber,
 }) => {
-  const data = await callAPI("/generate-content", {
+  const data = await callAPI("/api/gemini/generate-content", {
     type,
     title,
     subtitle,
@@ -93,7 +93,7 @@ export const generateContent = async ({
  * @returns {Promise<string>} - Generated image description
  */
 export const generateImageDescription = async ({ title, subtitle, layout }) => {
-  const data = await callAPI("/generate-image-description", {
+  const data = await callAPI("/api/gemini/generate-image-description", {
     title,
     subtitle,
     layout,
@@ -116,7 +116,7 @@ export const generateAllSections = async ({
   volume,
   issueNumber,
 }) => {
-  const data = await callAPI("/generate-all", {
+  const data = await callAPI("/api/gemini/generate-all", {
     title,
     subtitle,
     volume,

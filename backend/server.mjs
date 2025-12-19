@@ -61,9 +61,18 @@ const FRONTEND_ORIGINS = (process.env.FRONTEND_ORIGINS || FRONTEND_ORIGIN)
 
 const corsOptions = {
   origin(origin, callback) {
-    // allow requests with no origin (like curl, Postman, or server-to-server)
+    // Allow requests with no origin (like curl, Postman, or server-to-server)
     if (!origin) return callback(null, true);
+    
+    // Allow all Vercel preview URLs (*.vercel.app)
+    if (origin.endsWith('.vercel.app')) return callback(null, true);
+    
+    // Allow localhost for development
+    if (origin.startsWith('http://localhost')) return callback(null, true);
+    
+    // Check explicitly allowed origins
     if (FRONTEND_ORIGINS.indexOf(origin) !== -1) return callback(null, true);
+    
     return callback(new Error("CORS policy: Origin not allowed"));
   },
   credentials: true,
