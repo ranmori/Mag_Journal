@@ -102,7 +102,7 @@ export default function LandingPage() {
             </div>
 
             <button
-              onClick={() => navigate("/dashboard")}
+              onClick={() => navigate("/signup")}
               className={`group px-8 py-4 border-4 border-black font-bold text-xl ${
                 theme === "dark"
                   ? "bg-pink-600 hover:bg-pink-700"
