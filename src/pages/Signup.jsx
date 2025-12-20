@@ -86,22 +86,8 @@ export default function Signup() {
 
   /* ---------- ui ---------- */
   return (
-    <div
-      className={`min-h-screen w-full flex items-center justify-center px-4 py-8 font-serif transition-colors duration-300
-        lg:px-0 lg:py-0
-        ${theme === "dark" ? "bg-gray-900 text-gray-100" : "bg-[#f9f4e6] text-black"}`}
-    >
+ 
       {/* theme toggle – stays in top-right corner */}
-      <button
-        onClick={toggleTheme}
-        className={`fixed top-4 right-4 z-50 px-3 py-2 border-2 rounded-lg text-sm font-bold shadow-[2px_2px_0_rgba(0,0,0,.3)] transition
-          ${theme === "dark"
-            ? "bg-gray-800 border-gray-600 text-yellow-300 hover:bg-gray-700"
-            : "bg-white border-black text-black hover:bg-gray-50"}`}
-        aria-label="Toggle theme"
-      >
-        {theme === "dark" ? "☀ Light" : "🌙 Dark"}
-      </button>
 
       {/* card – becomes full-width on large screens */}
       <div
@@ -285,6 +271,6 @@ export default function Signup() {
           </div>
         </form>
       </div>
-    </div>
+  
   );
 }
