@@ -1,35 +1,9 @@
 // Signup.jsx
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { useTheme } from "../Components/ThemeContext";
 import { useNavigate } from "react-router-dom";
 
-/* ------------------------------------------------------------------ */
-/*  Animated background styles (injected once)                        */
-/* ------------------------------------------------------------------ */
-const AnimatedBg = () => (
-  <style>{`
-    @keyframes pan {
-      0%   { background-position: 0% 50%; }
-      50%  { background-position: 100% 50%; }
-      100% { background-position: 0% 50%; }
-    }
-    .animated-bg {
-      background: linear-gradient(135deg, #f9f4e6, #ffe6a7, #f9f4e6);
-      background-size: 400% 400%;
-      animation: pan 12s ease infinite;
-    }
-    .dark .animated-bg {
-      background: linear-gradient(135deg, #111827, #374151, #111827);
-      background-size: 400% 400%;
-      animation: pan 12s ease infinite;
-    }
-  `}</style>
-);
-
-/* ------------------------------------------------------------------ */
-/*  Page component                                                    */
-/* ------------------------------------------------------------------ */
 export default function Signup() {
   /* ---------- state ---------- */
   const [form, setForm] = useState({
@@ -43,27 +17,25 @@ export default function Signup() {
   const [serverError, setServerError] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState("");
-  const [jwt, setJwt] = useState(null);
+  const [jwt, setJwt] = useState(null); // access-token in memory
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
-
-  /* ---------- viewport hack: hide Layout chrome ---------- */
-  useEffect(() => {
-    document.body.classList.add("overflow-hidden"); // prevent double scroll
-    return () => document.body.classList.remove("overflow-hidden");
-  }, []);
 
   /* ---------- validation ---------- */
   const validate = (v) => {
     const e = {};
     if (!v.name.trim()) e.name = "Name is required";
     if (!v.email) e.email = "Email is required";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.email)) e.email = "Invalid email";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v.email))
+      e.email = "Invalid email";
     if (!v.password || v.password.length < 8)
       e.password = "≥ 8 chars, upper, lower & number";
-    else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(v.password))
+    else if (
+      !/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(v.password)
+    )
       e.password = "Must contain upper, lower & number";
-    if (v.password !== v.confirmPassword) e.confirmPassword = "Passwords do not match";
+    if (v.password !== v.confirmPassword)
+      e.confirmPassword = "Passwords do not match";
     return e;
   };
 
@@ -112,22 +84,15 @@ export default function Signup() {
     }
   };
 
-  /* ---------- render ---------- */
+  /* ---------- ui ---------- */
   return (
-    <div
-      className={`relative inset-0 flex items-center justify-center px-4 font-serif animated-bg ${
-        theme === "dark" ? "dark" : ""
-      }`}
-    >
-      <AnimatedBg />
 
-      {/* card – always full-width on large screens */}
       <div
-        className={`w-full max-w-md border-4 rounded-2xl p-6 sm:p-8
+        className={`w-full  border-4 rounded-2xl p-6 sm:p-8 transition-colors
           lg:max-w-none lg:w-full lg:h-full lg:rounded-none lg:border-0 lg:shadow-none
           ${theme === "dark"
             ? "bg-gray-800 border-gray-600 shadow-[6px_6px_0_rgba(0,0,0,.5)] lg:bg-gray-900"
-            : "bg-white/90 border-black shadow-[6px_6px_0_#000] lg:bg-white/90"}`}
+            : "bg-white border-black shadow-[6px_6px_0_#000] lg:bg-[#f9f4e6]"}`}
       >
         {/* header */}
         <div className="text-center mb-6 sm:mb-8">
@@ -303,6 +268,6 @@ export default function Signup() {
           </div>
         </form>
       </div>
-    </div>
+  
   );
 }
