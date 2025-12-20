@@ -59,43 +59,19 @@ const FRONTEND_ORIGINS = (process.env.FRONTEND_ORIGINS || FRONTEND_ORIGIN)
   .map((s) => s.trim())
   .filter(Boolean);
 
+const ALLOWED = [
+  'https://mag-journal.vercel.app',
+  'https://mag-journal.onrender.com',   // your own domain, if you call yourself
+  'http://localhost:5173'               // local dev
+];
+
 const corsOptions = {
-  origin: function (origin, callback) {
-    // Allow requests with no origin (mobile apps, Postman, curl, etc.)
-    if (!origin) {
-      console.log('✅ CORS: Allowing request with no origin');
-      return callback(null, true);
-    }
-
-    console.log('🔍 CORS: Checking origin:', origin);
-
-    // Allow all Vercel deployments (*.vercel.app)
-    if (origin.includes('.vercel.app')) {
-      console.log('✅ CORS: Allowing Vercel domain:', origin);
-      return callback(null, true);
-    }
-
-    // Allow localhost for development
-    if (origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1')) {
-      console.log('✅ CORS: Allowing localhost:', origin);
-      return callback(null, true);
-    }
-
-    // Check explicitly configured origins
-    if (FRONTEND_ORIGINS.includes(origin)) {
-      console.log('✅ CORS: Allowing configured origin:', origin);
-      return callback(null, true);
-    }
-
-    // Reject all other origins
-    console.warn('❌ CORS: Rejecting origin:', origin);
-    return callback(new Error(`CORS policy: Origin ${origin} not allowed`));
-  },
+  origin: ALLOWED,
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  exposedHeaders: ['Content-Range', 'X-Content-Range'],
-  maxAge: 600, // Cache preflight for 10 minutes
+  methods: ['GET','POST','PUT','DELETE','PATCH','OPTIONS'],
+  allowedHeaders: ['Content-Type','Authorization','X-Requested-With'],
+  exposedHeaders: ['Content-Range','X-Content-Range'],
+  maxAge: 600
 };
 
 // Apply CORS before other middleware
