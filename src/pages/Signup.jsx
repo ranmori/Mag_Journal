@@ -88,7 +88,7 @@ export default function Signup() {
   return (
 
       <div
-        className={`w-full max-w-md border-4 rounded-2xl p-6 sm:p-8 transition-colors
+        className={`w-full  border-4 rounded-2xl p-6 sm:p-8 transition-colors
           lg:max-w-none lg:w-full lg:h-full lg:rounded-none lg:border-0 lg:shadow-none
           ${theme === "dark"
             ? "bg-gray-800 border-gray-600 shadow-[6px_6px_0_rgba(0,0,0,.5)] lg:bg-gray-900"
