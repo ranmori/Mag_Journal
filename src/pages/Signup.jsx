@@ -115,23 +115,12 @@ export default function Signup() {
   /* ---------- render ---------- */
   return (
     <div
-      className={`fixed inset-0 flex items-center justify-center px-4 font-serif animated-bg ${
+      className={`w-full flex items-center justify-center px-4 font-serif animated-bg ${
         theme === "dark" ? "dark" : ""
       }`}
     >
       <AnimatedBg />
 
-      {/* theme toggle – stays in top-right corner */}
-      <button
-        onClick={toggleTheme}
-        className={`fixed top-4 right-4 z-50 px-3 py-2 border-2 rounded-lg text-sm font-bold shadow-[2px_2px_0_rgba(0,0,0,.3)] transition
-          ${theme === "dark"
-            ? "bg-gray-800 border-gray-600 text-yellow-300 hover:bg-gray-700"
-            : "bg-white border-black text-black hover:bg-gray-50"}`}
-        aria-label="Toggle theme"
-      >
-        {theme === "dark" ? "☀ Light" : "🌙 Dark"}
-      </button>
 
       {/* card – always full-width on large screens */}
       <div
