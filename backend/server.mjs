@@ -52,13 +52,6 @@ const envPath = path.join(__dirname, "..", ".env");
 
 dotenv.config({ path: envPath });
 const app = express();
-const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || "http://localhost:5173";
-// Support multiple allowed frontend origins via comma-separated env var
-const FRONTEND_ORIGINS = (process.env.FRONTEND_ORIGINS || FRONTEND_ORIGIN)
-  .split(",")
-  .map((s) => s.trim())
-  .filter(Boolean);
-
 const ALLOWED = [
   'https://mag-journal.vercel.app',
   'https://mag-journal.onrender.com',   // your own domain, if you call yourself
@@ -79,6 +72,14 @@ app.use(cors(corsOptions));
 
 
 app.options(/.*/, cors(corsOptions));
+const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || "http://localhost:5173";
+// Support multiple allowed frontend origins via comma-separated env var
+const FRONTEND_ORIGINS = (process.env.FRONTEND_ORIGINS || FRONTEND_ORIGIN)
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+
+
 app.use(express.json({ limit: "10mb" })); // Increase limit for base64 images
 app.use(cookieParser());
 app.use(helmet());
