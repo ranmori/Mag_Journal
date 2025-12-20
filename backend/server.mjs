@@ -101,13 +101,13 @@ const corsOptions = {
 // Apply CORS before other middleware
 app.use(cors(corsOptions));
 
-// Handle preflight requests explicitly
-app.options("(.*)", cors(corsOptions));
 
+app.options(/.*/, cors(corsOptions));
 app.use(express.json({ limit: "10mb" })); // Increase limit for base64 images
+app.use(cookieParser());
 app.use(helmet());
 app.use(compression());
-app.use(cookieParser());
+
 
 // rate limiter
 const limiter = rateLimit({
