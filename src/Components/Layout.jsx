@@ -15,7 +15,11 @@ const hideChrome = location.pathname.startsWith("/viewer");
 
   <div className="flex flex-1">
     {!hideChrome && <Sidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />}
-    <main className="flex-1 overflow-auto">
+   <main
+    className={`overflow-auto ${
+      location.pathname === "/signup" ? "flex-1 w-full" : "flex-1"
+    }`}
+  >
       <Outlet />
     </main>
   </div>
