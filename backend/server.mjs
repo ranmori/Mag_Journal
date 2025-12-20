@@ -60,29 +60,49 @@ const FRONTEND_ORIGINS = (process.env.FRONTEND_ORIGINS || FRONTEND_ORIGIN)
   .filter(Boolean);
 
 const corsOptions = {
-  origin(origin, callback) {
-    // Allow requests with no origin (like curl, Postman, or server-to-server)
-    if (!origin) return callback(null, true);
-    
-    // Allow all Vercel preview URLs (*.vercel.app)
-    if (origin && origin.endsWith('.vercel.app')) return callback(null, true);
-    
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, Postman, curl, etc.)
+    if (!origin) {
+      console.log('✅ CORS: Allowing request with no origin');
+      return callback(null, true);
+    }
+
+    console.log('🔍 CORS: Checking origin:', origin);
+
+    // Allow all Vercel deployments (*.vercel.app)
+    if (origin.includes('.vercel.app')) {
+      console.log('✅ CORS: Allowing Vercel domain:', origin);
+      return callback(null, true);
+    }
+
     // Allow localhost for development
-    if (origin && origin.startsWith('http://localhost')) return callback(null, true);
-    
-    // Check explicitly allowed origins
-    if (FRONTEND_ORIGINS.indexOf(origin) !== -1) return callback(null, true);
-    
-    // Log rejected origin for debugging
-    logger.warn(`CORS rejected origin: ${origin}`);
-    return callback(new Error("CORS policy: Origin not allowed"));
+    if (origin.startsWith('http://localhost') || origin.startsWith('http://127.0.0.1')) {
+      console.log('✅ CORS: Allowing localhost:', origin);
+      return callback(null, true);
+    }
+
+    // Check explicitly configured origins
+    if (FRONTEND_ORIGINS.includes(origin)) {
+      console.log('✅ CORS: Allowing configured origin:', origin);
+      return callback(null, true);
+    }
+
+    // Reject all other origins
+    console.warn('❌ CORS: Rejecting origin:', origin);
+    return callback(new Error(`CORS policy: Origin ${origin} not allowed`));
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  maxAge: 600, // Cache preflight for 10 minutes
 };
 
+// Apply CORS before other middleware
 app.use(cors(corsOptions));
+
+// Handle preflight requests explicitly
+app.options('*', cors(corsOptions));
 app.use(express.json({ limit: "10mb" })); // Increase limit for base64 images
 app.use(helmet());
 app.use(compression());
