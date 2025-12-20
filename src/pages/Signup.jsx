@@ -115,12 +115,11 @@ export default function Signup() {
   /* ---------- render ---------- */
   return (
     <div
-      className={`w-full flex items-center justify-center px-4 font-serif animated-bg ${
+      className={`relative inset-0 flex items-center justify-center px-4 font-serif animated-bg ${
         theme === "dark" ? "dark" : ""
       }`}
     >
       <AnimatedBg />
-
 
       {/* card – always full-width on large screens */}
       <div
