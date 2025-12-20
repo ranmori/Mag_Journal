@@ -86,10 +86,7 @@ export default function Signup() {
 
   /* ---------- ui ---------- */
   return (
- 
-      {/* theme toggle – stays in top-right corner */}
 
-      {/* card – becomes full-width on large screens */}
       <div
         className={`w-full max-w-md border-4 rounded-2xl p-6 sm:p-8 transition-colors
           lg:max-w-none lg:w-full lg:h-full lg:rounded-none lg:border-0 lg:shadow-none
