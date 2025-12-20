@@ -28,7 +28,7 @@ export default function IssueEditor() {
   const fileInputRef = useRef(null);
   const [selectedMusicTrack, setSelectedMusicTrack] = useState(null);
 
-  const API_BASE_URL = import.meta.env.VITE_API_URL;
+  const API_BASE_URL = import.meta.env.VITE_API_BASE;
 
   useEffect(() => {
     if (id && id !== "new") {
@@ -115,52 +115,78 @@ export default function IssueEditor() {
     setSuccessMessage("");
   };
 
-  const handleSave = async () => {
-    clearMessages();
-    if (!validateForm()) return;
-    setIsLoading(true);
+  // IssueEditor.jsx - Improved handleSave with better error handling
 
+const handleSave = async () => {
+  clearMessages();
+  if (!validateForm()) return;
+  setIsLoading(true);
+
+  try {
+    const issueData = {
+      title,
+      subtitle,
+      volume,
+      issueNumber,
+      layout: selectedLayout,
+      foreword,
+      reflections,
+      lessons,
+      images: uploadedImage ? [uploadedImage] : [],
+      musicTrack: selectedMusicTrack,
+    };
+
+    console.log('Sending issue data to:', `${API_BASE_URL}/api/issues`);
+    console.log('Issue data:', { 
+      title: issueData.title, 
+      volume: issueData.volume, 
+      issueNumber: issueData.issueNumber 
+    });
+
+    const res = await fetch(`${API_BASE_URL}/api/issues`, {
+      method: "POST",
+      headers: { 
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(issueData),
+    });
+
+    console.log('Response status:', res.status);
+    console.log('Response headers:', res.headers);
+
+    // Get response text first to check what we're receiving
+    const responseText = await res.text();
+    console.log('Response text:', responseText.substring(0, 200));
+
+    // Try to parse as JSON
+    let data;
     try {
-      const issueData = {
-        title,
-        subtitle,
-        volume,
-        issueNumber,
-        layout: selectedLayout,
-        foreword,
-        reflections,
-        lessons,
-        images: uploadedImage ? [uploadedImage] : [],
-        musicTrack: selectedMusicTrack,
-      };
-      const res = await fetch(`${API_BASE_URL}/api/issues`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(issueData),
-      });
-
-      if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData.error || "Failed to save issue");
-      }
-
-      const savedIssue = await res.json();
-      console.log("Saved Issue:", savedIssue);
-      setSuccessMessage("✅ Issue saved successfully!");
-
-      setTimeout(() => {
-        navigate("/");
-      }, 1500);
-    } catch (error) {
-      console.error(error);
-      setErrors({
-        save: error.message || "Failed to save issue. Please try again.",
-      });
-    } finally {
-      setIsLoading(false);
+      data = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error('Failed to parse response as JSON:', parseError);
+      throw new Error(`Server returned non-JSON response: ${responseText.substring(0, 100)}`);
     }
-  };
 
+    // Check if request was successful
+    if (!res.ok) {
+      throw new Error(data.error || data.message || `HTTP ${res.status}: Failed to save issue`);
+    }
+
+    console.log("Saved Issue:", data);
+    setSuccessMessage("✅ Issue saved successfully!");
+
+    setTimeout(() => {
+      navigate("/");
+    }, 1500);
+  } catch (error) {
+    console.error('Save error details:', error);
+    setErrors({
+      save: error.message || "Failed to save issue. Please check your connection and try again.",
+    });
+  } finally {
+    setIsLoading(false);
+  }
+};
   const exportToPDF = async () => {
     clearMessages();
     if (!validateForm()) return;

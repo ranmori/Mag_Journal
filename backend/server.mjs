@@ -65,17 +65,21 @@ const corsOptions = {
     if (!origin) return callback(null, true);
     
     // Allow all Vercel preview URLs (*.vercel.app)
-    if (origin.endsWith('.vercel.app')) return callback(null, true);
+    if (origin && origin.endsWith('.vercel.app')) return callback(null, true);
     
     // Allow localhost for development
-    if (origin.startsWith('http://localhost')) return callback(null, true);
+    if (origin && origin.startsWith('http://localhost')) return callback(null, true);
     
     // Check explicitly allowed origins
     if (FRONTEND_ORIGINS.indexOf(origin) !== -1) return callback(null, true);
     
+    // Log rejected origin for debugging
+    logger.warn(`CORS rejected origin: ${origin}`);
     return callback(new Error("CORS policy: Origin not allowed"));
   },
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 };
 
 app.use(cors(corsOptions));
@@ -351,6 +355,10 @@ const authenticateToken = (req, res, next) => {
   }
 };
 
+
+
+
+
 // ============== API ROUTES ==============
 
 // Health check
@@ -361,7 +369,20 @@ app.get("/api/health", (req, res) => {
     mongodbConfigured: !!MONGODB_URI,
   });
 });
-
+// error checker
+app.use((err, req, res, next) => {
+  logger.error('Error middleware caught:', err);
+  
+  // Always return JSON, never HTML
+  res.status(err.status || 500).json({
+    error: process.env.NODE_ENV === 'production' 
+      ? 'Something went wrong' 
+      : err.message,
+    details: process.env.NODE_ENV === 'production' 
+      ? undefined 
+      : err.stack
+  });
+});
 
 // ===== GEMINI AI ROUTES =====
 app.post("/api/gemini/generate-title", async (req, res) => {
@@ -568,53 +589,44 @@ app.post("/api/auth/logout", async (req, res) => {
 
 // ===== ISSUE CRUD ROUTES =====
 
-// Create new issue
-app.post("/api/issues", async (req, res) => {
-  try {
-    const issue = new Issue({
-      ...req.body,
-      updatedAt: new Date(),
-    });
-    await issue.save();
-    res.status(201).json(issue);
-  } catch (err) {
-    logger.error("Save issue error:", err);
-    res
-      .status(500)
-      .json({ error: "Failed to save issue", details: err.message });
-  }
-});
 // validate issue
 app.post(
   "/api/issues",
   [
     body("title").trim().notEmpty().withMessage("Title is required"),
     body("volume").trim().notEmpty().withMessage("Volume is required"),
-    body("issueNumber")
-      .trim()
-      .notEmpty()
-      .withMessage("Issue number is required"),
-    // optional: validate images structure length/type if sending JSON
+    body("issueNumber").trim().notEmpty().withMessage("Issue number is required"),
   ],
   async (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res
-        .status(400)
-        .json({ error: "Validation failed", details: errors.array() });
-    }
     try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ 
+          error: "Validation failed", 
+          details: errors.array() 
+        });
+      }
+
+      logger.info('Creating new issue:', { title: req.body.title });
+
       const issue = new Issue({
         ...req.body,
         updatedAt: new Date(),
       });
+      
       await issue.save();
-      res.status(201).json(issue);
+      
+      logger.info('Issue saved successfully:', issue._id);
+      
+      return res.status(201).json(issue);
     } catch (err) {
       logger.error("Save issue error:", err);
-      res
-        .status(500)
-        .json({ error: "Failed to save issue", details: err.message });
+      
+      // Return JSON error, not HTML
+      return res.status(500).json({ 
+        error: "Failed to save issue", 
+        details: process.env.NODE_ENV === 'production' ? undefined : err.message 
+      });
     }
   }
 );
@@ -737,7 +749,12 @@ if (MONGODB_URI) {
 
 // 404 handler
 app.use((req, res) => {
-  res.status(404).json({ error: "Not found" });
+  logger.warn(`404 - Route not found: ${req.method} ${req.path}`);
+  res.status(404).json({ 
+    error: "Route not found",
+    path: req.path,
+    method: req.method
+  });
 });
 app.use((err, req, res, next) => {
   logger.error(err.stack);
